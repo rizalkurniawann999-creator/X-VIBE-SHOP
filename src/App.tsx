@@ -6,9 +6,10 @@ import { ProductCard } from './components/ProductCard';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
+import { AuthModal } from './components/AuthModal';
 import { InventoryAdmin } from './components/InventoryAdmin';
 import { Footer } from './components/Footer';
-import { Sparkles, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
+import { Sparkles, Zap, ArrowRight, UserCheck } from 'lucide-react';
 
 export function App() {
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -16,6 +17,14 @@ export function App() {
   const [activeCategory, setActiveCategory] = useState<Category>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentView, setCurrentView] = useState<'shop' | 'admin'>('shop');
+
+  // Auth state
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; isAdmin: boolean } | null>({
+    name: 'Rizal Admin',
+    email: 'admin@xvibe.shop',
+    isAdmin: true
+  });
+  const [authOpen, setAuthOpen] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -92,11 +101,19 @@ export function App() {
         onSearchChange={setSearchQuery}
         currentView={currentView}
         onViewChange={setCurrentView}
+        currentUser={currentUser}
+        onOpenAuth={() => setAuthOpen(true)}
+        onLogout={() => {
+          setCurrentUser(null);
+          setCurrentView('shop');
+          setSuccessToast('Signed out successfully.');
+          setTimeout(() => setSuccessToast(null), 3000);
+        }}
       />
 
       {/* Main Content Area */}
       <main className="flex-1">
-        {currentView === 'admin' ? (
+        {currentView === 'admin' && currentUser?.isAdmin ? (
           <InventoryAdmin
             products={products}
             onUpdateProduct={(updated) => setProducts(prev => prev.map(p => p.id === updated.id ? updated : p))}
@@ -135,10 +152,12 @@ export function App() {
                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                       </button>
 
-                      <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs text-gray-300 font-medium">
-                        <ShieldCheck size={18} className="text-emerald-400" />
-                        <span>Stripe & PayPal Verified</span>
-                      </div>
+                      {currentUser && (
+                        <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 text-xs text-indigo-200 font-medium">
+                          <UserCheck size={16} className="text-emerald-400" />
+                          <span>Logged in as {currentUser.name} ({currentUser.isAdmin ? 'Admin' : 'Customer'})</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -254,6 +273,16 @@ export function App() {
         onClose={() => setCheckoutOpen(false)}
         items={cart}
         onOrderSuccess={handleOrderSuccess}
+      />
+
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setSuccessToast(`Welcome back, ${user.name}! (${user.isAdmin ? 'Admin Mode' : 'Customer Mode'})`);
+          setTimeout(() => setSuccessToast(null), 4000);
+        }}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Search, ShieldCheck, Settings, Menu, X, Sparkles } from 'lucide-react';
+import { ShoppingBag, Search, ShieldCheck, Settings, Menu, X, Sparkles, User, LogOut } from 'lucide-react';
 import { Category } from '../types';
 
 interface NavbarProps {
@@ -11,6 +11,9 @@ interface NavbarProps {
   onSearchChange: (q: string) => void;
   currentView: 'shop' | 'admin';
   onViewChange: (view: 'shop' | 'admin') => void;
+  currentUser: { name: string; email: string; isAdmin: boolean } | null;
+  onOpenAuth: () => void;
+  onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -21,7 +24,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchQuery,
   onSearchChange,
   currentView,
-  onViewChange
+  onViewChange,
+  currentUser,
+  onOpenAuth,
+  onLogout
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const categories: Category[] = ['All', 'Physical', 'Digital', 'Apparel', 'Gadgets'];
@@ -70,17 +76,47 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => onViewChange(currentView === 'shop' ? 'admin' : 'shop')}
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                currentView === 'admin'
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <Settings size={15} />
-              <span>{currentView === 'shop' ? 'Inventory Admin' : 'Back to Shop'}</span>
-            </button>
+            {currentUser?.isAdmin && (
+              <button
+                onClick={() => onViewChange(currentView === 'shop' ? 'admin' : 'shop')}
+                className={`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  currentView === 'admin'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Settings size={15} />
+                <span>{currentView === 'shop' ? 'Inventory Admin' : 'Back to Shop'}</span>
+              </button>
+            )}
+
+            {/* Auth Button */}
+            {currentUser ? (
+              <div className="hidden sm:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5">
+                <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="text-left">
+                  <span className="block text-xs font-bold text-gray-900 leading-tight">{currentUser.name}</span>
+                  <span className="block text-[10px] text-indigo-600 font-medium">{currentUser.isAdmin ? 'Store Admin' : 'VIP Member'}</span>
+                </div>
+                <button
+                  onClick={onLogout}
+                  className="ml-2 p-1 text-gray-400 hover:text-rose-600 transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onOpenAuth}
+                className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition-all"
+              >
+                <User size={15} />
+                <span>Sign In / Register</span>
+              </button>
+            )}
 
             <button
               onClick={onOpenCart}
